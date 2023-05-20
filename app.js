@@ -30,7 +30,8 @@ mongoose.connect("mongodb://0.0.0.0:27017/userDB", { useNewUrlParser: true });
 const userSchema = new mongoose.Schema({
     email: String,
     password: String,
-    googleId: String
+    googleId: String,
+    secret: String
 });
 
 userSchema.plugin(passportLocalMongoose);
@@ -89,8 +90,16 @@ app.get("/register", function (req, res) {
 });
 
 app.get("/secrets", function (req, res) {
+    User.find({"secret": {$ne: null}}).then(function(foundUsers) {
+        if (foundUsers) {
+            res.render("secrets", {usersWithSecret: foundUsers})
+        }
+    })
+});
+
+app.get("/submit", function(req, res) {
     if (req.isAuthenticated()) {
-        res.render("secrets");
+        res.render("submit");
     } else {
         res.redirect("/login");
     }
@@ -103,7 +112,8 @@ app.get("/logout", function(req, res, next) {
         }
         res.redirect("/");
     });
-})
+});
+
 
 // ************ using bcrypt ************//
 
@@ -135,6 +145,23 @@ app.post("/login", async function (req, res) {
             })
         }
     })
+});
+
+app.post("/submit", function(req, res) {
+    const submittedSecret = req.body.secret;
+    console.log(req.user);
+
+    User.findById(req.user.id).then(async function(foundUser) {
+        if (foundUser) {
+            foundUser.secret = submittedSecret;
+            await foundUser.save();
+            res.redirect("/secrets");
+        }
+    })
+    .catch(function(err){
+        console.log(err);
+    })
+    
 });
 
 // ************ end of bcrypt ************//
