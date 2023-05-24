@@ -89,8 +89,8 @@ app.get("/register", function (req, res) {
     res.render("register");
 });
 
-app.get("/secrets", function (req, res) {
-    User.find({"secret": {$ne: null}}).then(function(foundUsers) {
+app.get("/secrets", async function (req, res) {
+    await User.find({"secret": {$ne: null}}).then(function(foundUsers) {
         if (foundUsers) {
             res.render("secrets", {usersWithSecret: foundUsers})
         }
@@ -147,10 +147,10 @@ app.post("/login", async function (req, res) {
     })
 });
 
-app.post("/submit", function(req, res) {
+app.post("/submit", async function(req, res) {
     const submittedSecret = req.body.secret;
 
-    User.findById(req.user.id).then(async function(foundUser) {
+    await User.findById(req.user.id).then(async function(foundUser) {
         if (foundUser) {
             foundUser.secret = submittedSecret;
             await foundUser.save();
